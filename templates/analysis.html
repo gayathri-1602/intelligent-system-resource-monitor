@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block nav_analysis %}active{% endblock %}
+
+{% block header %}Machine Learning & Algorithm Analysis{% endblock %}
+
+{% block content %}
+<section id="analysis" class="analysis-section">
+    <div class="analysis-grid">
+        <!-- Prediction Card -->
+        <div class="card prediction-card">
+            <h3>Next CPU State Prediction</h3>
+            <div class="pred-value" id="prediction-val">--</div>
+            <p class="pred-model">Model: <span id="model-name">Linear Regression</span></p>
+            <p id="prediction-status">Initializing AI...</p>
+        </div>
+
+        <!-- Anomaly Detection Card -->
+        <div class="card anomaly-card">
+            <h3>Anomaly Detection (Isolation Forest)</h3>
+            <div class="status-box" id="anomaly-status">
+                <i class="fas fa-check-circle"></i> Normal
+            </div>
+            <p id="anomaly-desc">System behavior is within expected parameters.</p>
+        </div>
+
+        <!-- Model Comparison Card -->
+        <div class="card model-stats-card">
+            <h3>Model Performance (MSE / R²)</h3>
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Algorithm</th>
+                        <th>MSE (Lower is better)</th>
+                        <th>R² (Higher is better)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Linear Regression</td>
+                        <td id="lr-mse">--</td>
+                        <td id="lr-r2">--</td>
+                    </tr>
+                    <tr>
+                        <td>Random Forest</td>
+                        <td id="rf-mse">--</td>
+                        <td id="rf-r2">--</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Clustering Card -->
+        <div class="card clustering-card">
+            <h3>System State Clustering (K-Means)</h3>
+            <div class="status-box" id="cluster-status">
+                <i class="fas fa-layer-group"></i> Calculating...
+            </div>
+            <p id="cluster-desc">Grouping system states based on resource usage.</p>
+        </div>
+
+        <!-- Correlation Matrix Card -->
+        <div class="card correlation-card" style="grid-column: span 2;">
+            <h3>Feature Correlation Matrix</h3>
+            <table class="stats-table" id="correlation-table">
+                <!-- Populated by JS -->
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

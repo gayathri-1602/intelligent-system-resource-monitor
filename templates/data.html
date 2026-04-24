@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block nav_data %}active{% endblock %}
+
+{% block header %}Data Management{% endblock %}
+
+{% block content %}
+<section id="data" class="data-section">
+    
+    <!-- Metrics Section -->
+    <div class="card">
+        <h3><i class="fas fa-chart-line"></i> System Metrics Data</h3>
+        <div class="actions" style="margin-bottom: 15px;">
+            <button onclick="exportMetricsCSV()" class="btn"><i class="fas fa-download"></i> Export Metrics (CSV)</button>
+            <button onclick="exportMetricsJSON()" class="btn"><i class="fas fa-download"></i> Export Metrics (JSON)</button>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>CPU %</th>
+                        <th>RAM %</th>
+                        <th>Disk %</th>
+                        <th>Swap %</th>
+                        <th>CPU Freq (MHz)</th>
+                        <th>Net Sent (KB)</th>
+                        <th>Net Recv (KB)</th>
+                        <th>Disk Read (KB)</th>
+                        <th>Disk Write (KB)</th>
+                    </tr>
+                </thead>
+                <tbody id="metrics-table">
+                    <tr><td colspan="10" style="text-align: center; padding: 20px;">Loading data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="metrics-pagination" style="margin-top: 15px; text-align: center; color: #666;"></div>
+    </div>
+
+    <!-- Process Samples Section -->
+    <div class="card" style="margin-top: 30px;">
+        <h3><i class="fas fa-list"></i> Process Samples</h3>
+        <div class="actions" style="margin-bottom: 15px;">
+            <button onclick="exportProcessesCSV()" class="btn"><i class="fas fa-download"></i> Export Processes (CSV)</button>
+            <button onclick="exportProcessesJSON()" class="btn"><i class="fas fa-download"></i> Export Processes (JSON)</button>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>PID</th>
+                        <th>Process Name</th>
+                        <th>CPU %</th>
+                        <th>Memory %</th>
+                    </tr>
+                </thead>
+                <tbody id="processes-table">
+                    <tr><td colspan="5" style="text-align: center; padding: 20px;">Loading data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="processes-pagination" style="margin-top: 15px; text-align: center; color: #666;"></div>
+    </div>
+
+    <!-- Overall Data Management -->
+    <div class="card" style="margin-top: 30px;">
+        <h3><i class="fas fa-database"></i> Data Management (DBMS)</h3>
+        <p>Manage collected system metrics data.</p>
+        <div class="actions">
+            <button onclick="exportAllData()" class="btn"><i class="fas fa-file-download"></i> Export All Data (ZIP)</button>
+        </div>
+    </div>
+
+</section>
+
+<style>
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9em;
+        margin: 10px 0;
+    }
+    
+    .data-table thead {
+        background-color: #f0f0f0;
+        position: sticky;
+        top: 0;
+    }
+    
+    .data-table th, .data-table td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    .data-table tbody tr:hover {
+        background-color: #f9f9f9;
+    }
+    
+    .data-table thead th {
+        background-color: #6c5ce7;
+        color: white;
+        font-weight: bold;
+    }
+    
+    .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .btn {
+        padding: 8px 12px;
+        background-color: #6c5ce7;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+    }
+    
+    .btn:hover {
+        background-color: #5f3dc4;
+    }
+</style>
+
+<script>
+let metricsData = [];
+let processesData = [];
+const metricsPageSize = 50;
+let metricsCurrentPage = 1;
+const processesPageSize = 50;
+let processesCurrentPage = 1;
+
+async function loadMetricsData() {
+    try {
+        const res = await fetch('/api/all_metrics');
+        metricsData = await res.json();
+        displayMetrics();
+    } catch (e) {
+        console.error("Failed to load metrics", e);
+        document.getElementById('metrics-table').innerHTML = 
+            '<tr><td colspan="10" style="text-align: center; color: red;">Failed to load data</td></tr>';
+    }
+}
+
+async function loadProcessesData() {
+    try {
+        const res = await fetch('/api/all_processes');
+        processesData = await res.json();
+        displayProcesses();
+    } catch (e) {
+        console.error("Failed to load processes", e);
+        document.getElementById('processes-table').innerHTML = 
+            '<tr><td colspan="5" style="text-align: center; color: red;">Failed to load data</td></tr>';
+    }
+}
+
+function displayMetrics() {
+    const tbody = document.getElementById('metrics-table');
+    const start = (metricsCurrentPage - 1) * metricsPageSize;
+    const end = start + metricsPageSize;
+    const paginatedData = metricsData.slice(start, end);
+    
+    if (paginatedData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center;">No data available</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    paginatedData.forEach(row => {
+        const date = new Date(row.timestamp * 1000).toLocaleString();
+        html += `<tr>
+            <td>${date}</td>
+            <td>${row.cpu.toFixed(1)}</td>
+            <td>${row.ram.toFixed(1)}</td>
+            <td>${row.disk.toFixed(1)}</td>
+            <td>${row.swap.toFixed(1)}</td>
+            <td>${row.cpu_freq.toFixed(0)}</td>
+            <td>${(row.net_sent / 1024).toFixed(1)}</td>
+            <td>${(row.net_recv / 1024).toFixed(1)}</td>
+            <td>${(row.disk_read / 1024).toFixed(1)}</td>
+            <td>${(row.disk_write / 1024).toFixed(1)}</td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+    
+    // Pagination info
+    const totalPages = Math.ceil(metricsData.length / metricsPageSize);
+    document.getElementById('metrics-pagination').innerText = 
+        `Page ${metricsCurrentPage} of ${totalPages} (Total: ${metricsData.length} records)`;
+}
+
+function displayProcesses() {
+    const tbody = document.getElementById('processes-table');
+    const start = (processesCurrentPage - 1) * processesPageSize;
+    const end = start + processesPageSize;
+    const paginatedData = processesData.slice(start, end);
+    
+    if (paginatedData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No data available</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    paginatedData.forEach(row => {
+        const date = new Date(row.timestamp * 1000).toLocaleString();
+        html += `<tr>
+            <td>${date}</td>
+            <td>${row.pid || 'N/A'}</td>
+            <td>${row.name || 'N/A'}</td>
+            <td>${row.cpu ? row.cpu.toFixed(1) : 'N/A'}%</td>
+            <td>${row.memory ? row.memory.toFixed(1) : 'N/A'}%</td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+    
+    // Pagination info
+    const totalPages = Math.ceil(processesData.length / processesPageSize);
+    document.getElementById('processes-pagination').innerText = 
+        `Page ${processesCurrentPage} of ${totalPages} (Total: ${processesData.length} records)`;
+}
+
+function exportMetricsCSV() {
+    let csv = 'Timestamp,CPU %,RAM %,Disk %,Swap %,CPU Freq (MHz),Net Sent (KB),Net Recv (KB),Disk Read (KB),Disk Write (KB)\n';
+    metricsData.forEach(row => {
+        const date = new Date(row.timestamp * 1000).toLocaleString();
+        csv += `"${date}",${row.cpu.toFixed(1)},${row.ram.toFixed(1)},${row.disk.toFixed(1)},${row.swap.toFixed(1)},${row.cpu_freq.toFixed(0)},${(row.net_sent/1024).toFixed(1)},${(row.net_recv/1024).toFixed(1)},${(row.disk_read/1024).toFixed(1)},${(row.disk_write/1024).toFixed(1)}\n`;
+    });
+    downloadFile(csv, 'metrics.csv', 'text/csv');
+}
+
+function exportMetricsJSON() {
+    downloadFile(JSON.stringify(metricsData, null, 2), 'metrics.json', 'application/json');
+}
+
+function exportProcessesCSV() {
+    let csv = 'Timestamp,PID,Process Name,CPU %,Memory %\n';
+    processesData.forEach(row => {
+        const date = new Date(row.timestamp * 1000).toLocaleString();
+        csv += `"${date}",${row.pid || 'N/A'},"${row.name || 'N/A'}",${row.cpu ? row.cpu.toFixed(1) : 'N/A'},${row.memory ? row.memory.toFixed(1) : 'N/A'}\n`;
+    });
+    downloadFile(csv, 'processes.csv', 'text/csv');
+}
+
+function exportProcessesJSON() {
+    downloadFile(JSON.stringify(processesData, null, 2), 'processes.json', 'application/json');
+}
+
+function exportAllData() {
+    const allData = {
+        metrics: metricsData,
+        processes: processesData,
+        exported_at: new Date().toISOString()
+    };
+    downloadFile(JSON.stringify(allData, null, 2), 'all_data.json', 'application/json');
+}
+
+function downloadFile(content, filename, type) {
+    const blob = new Blob([content], { type: type });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    a.remove();
+}
+
+// Load data on page load
+document.addEventListener('DOMContentLoaded', () => {
+    loadMetricsData();
+    loadProcessesData();
+});
+</script>
+
+{% endblock %}

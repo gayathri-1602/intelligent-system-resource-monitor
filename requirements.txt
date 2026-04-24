@@ -1,0 +1,7 @@
+flask
+psutil
+scikit-learn
+pandas
+numpy
+mysql-connector-pythonpython-dotenv
+flask-compress

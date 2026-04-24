@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block nav_processes %}active{% endblock %}
+
+{% block header %}Process Management{% endblock %}
+
+{% block content %}
+<section id="processes" class="processes-section">
+    <div class="card">
+        <h3><i class="fas fa-fire"></i> Top CPU Consuming Processes</h3>
+        <table class="process-table">
+            <thead>
+                <tr>
+                    <th>PID</th>
+                    <th>Name</th>
+                    <th>CPU %</th>
+                    <th>Memory %</th>
+                </tr>
+            </thead>
+            <tbody id="process-list">
+                <!-- Populated by JS -->
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
