@@ -3,5 +3,6 @@ psutil
 scikit-learn
 pandas
 numpy
-mysql-connector-pythonpython-dotenv
+mysql-connector-python
+python-dotenv
 flask-compress

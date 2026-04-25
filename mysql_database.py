@@ -22,8 +22,17 @@ def _db_config():
     }
 
 
-def get_connection():
-    return mysql.connector.connect(**_db_config())
+def get_connection(retries=5, delay=3):
+    """Connect to MySQL with retry logic for Docker startup timing."""
+    last_err = None
+    for attempt in range(retries):
+        try:
+            return mysql.connector.connect(**_db_config())
+        except mysql.connector.Error as e:
+            last_err = e
+            if attempt < retries - 1:
+                time.sleep(delay)
+    raise last_err
 
 
 def init_db():
