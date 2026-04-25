@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: isrm-app
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: MYSQL_HOST
+        fromDatabase:
+          name: isrm-db
+          property: host
+      - key: MYSQL_PORT
+        fromDatabase:
+          name: isrm-db
+          property: port
+      - key: MYSQL_USER
+        fromDatabase:
+          name: isrm-db
+          property: user
+      - key: MYSQL_PASSWORD
+        fromDatabase:
+          name: isrm-db
+          property: password
+      - key: MYSQL_DATABASE
+        fromDatabase:
+          name: isrm-db
+          property: database
+
+databases:
+  - name: isrm-db
+    databaseName: isrm
+    plan: free

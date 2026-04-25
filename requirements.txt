@@ -1,4 +1,5 @@
 flask
+gunicorn
 psutil
 scikit-learn
 pandas

@@ -80,7 +80,7 @@ def collect_metrics():
             # CPU & RAM
             cpu = psutil.cpu_percent(interval=1)
             ram = psutil.virtual_memory().percent
-            disk = psutil.disk_usage('/').percent
+            disk = psutil.disk_usage('/').percent if os.name != 'nt' else psutil.disk_usage('C:\\').percent
             swap = psutil.swap_memory().percent
             cpu_freq = psutil.cpu_freq().current if psutil.cpu_freq() else 0
 
@@ -185,13 +185,11 @@ def get_metrics():
         # Get latest current readings
         cpu = psutil.cpu_percent(interval=None)
         ram = psutil.virtual_memory().percent
-        disk = psutil.disk_usage('/').percent
+        disk = psutil.disk_usage('/').percent if os.name != 'nt' else psutil.disk_usage('C:\\').percent
         swap = psutil.swap_memory().percent
         cpu_freq = psutil.cpu_freq().current if psutil.cpu_freq() else 0
-        
-        # Process count
         process_count = len(psutil.pids())
-        
+
         return jsonify({
             'cpu': cpu,
             'ram': ram,
@@ -314,4 +312,5 @@ def get_all_processes():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=False, port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', debug=False, port=port)
