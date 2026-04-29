@@ -24,6 +24,13 @@ COPY mysql_database.py .
 COPY static/ ./static/
 COPY templates/ ./templates/
 
+# Database environment variables
+ENV MYSQL_HOST=db \
+    MYSQL_PORT=3306 \
+    MYSQL_USER=root \
+    MYSQL_PASSWORD=gayathri \
+    MYSQL_DATABASE=isrm
+
 # Expose Flask port
 EXPOSE 5000
 
